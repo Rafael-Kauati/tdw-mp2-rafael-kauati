@@ -57,10 +57,11 @@ export type RawStats = z.infer<typeof rawStatsSchema>;
 /**
  * O ficheiro completo. `events` e `stats` ficam como `unknown` de propósito:
  * validamos evento a evento (e as estatísticas à parte), para que UM item
- * mau não invalide as 5000+ linhas.
+ * mau não invalide as 5000+ linhas. `stats` é `.optional()` porque no zod 4 um
+ * `z.unknown()` simples seria obrigatório (a chave teria de existir).
  */
 export const rawFeedSchema = z.object({
   generated_at: z.string().nullish(),
-  stats: z.unknown(),
+  stats: z.unknown().optional(),
   events: z.array(z.unknown()),
 });

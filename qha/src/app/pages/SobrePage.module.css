@@ -1,0 +1,18 @@
+.article {
+  max-width: 44rem;
+  line-height: 1.6;
+}
+
+.heading {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-2xl);
+}
+
+.article h2 {
+  margin: var(--space-8) 0 var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.article p {
+  margin: 0 0 var(--space-3);
+}

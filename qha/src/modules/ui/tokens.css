@@ -1,0 +1,57 @@
+/*
+ * Design tokens. Tudo o que é cor, tipografia, espaçamento e raio vive aqui,
+ * em variáveis CSS; os componentes só usam var(--...). Trocar o tema = mexer neste ficheiro.
+ * Estética "cartaz": papel quente, tinta escura e um vermelho vivo como destaque.
+ */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #f6f1e7;
+  --color-surface: #fffdf8;
+  --color-ink: #1c1917;
+  --color-muted: #6b645a;
+  --color-border: #ded6c6;
+  --color-accent: #c2331b;
+  --color-accent-hover: #a82a15;
+  --color-on-accent: #ffffff;
+  --color-accent-soft: #f6dcd5;
+  --color-skeleton: #e8e0d0;
+
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: Georgia, 'Times New Roman', serif;
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  --content-width: 72rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #15120f;
+    --color-surface: #1f1b17;
+    --color-ink: #f3ece0;
+    --color-muted: #a79f92;
+    --color-border: #3a342d;
+    --color-accent: #ff7a5c;
+    --color-accent-hover: #ff9378;
+    --color-on-accent: #1a0f0b;
+    --color-accent-soft: #3d241c;
+    --color-skeleton: #2c2722;
+  }
+}

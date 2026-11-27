@@ -11,3 +11,5 @@ export {
   isRetryableEventsError,
 } from './data/errors';
 export type { EventsErrorMessage } from './data/errors';
+export { EventDetail } from './components/EventDetail';
+export { formatEventDates, formatPrice } from './components/format';

@@ -1,0 +1,11 @@
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-6);
+  font-weight: 600;
+}
+
+.skeleton {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 48rem;
+}

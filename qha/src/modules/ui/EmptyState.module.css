@@ -1,0 +1,20 @@
+.box {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.description {
+  margin: 0;
+  max-width: 40ch;
+  color: var(--color-muted);
+}

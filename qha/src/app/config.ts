@@ -1,3 +1,5 @@
+export const APP_NAME = 'Cartaz';
+
 const DEFAULT_EVENTS_URL = 'https://www.nocartaz.pt/events.json';
 
 /**

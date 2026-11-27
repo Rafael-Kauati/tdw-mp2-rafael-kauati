@@ -1,13 +1,15 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css'; // remove esta linha se o teu projeto não tiver src/index.css
+import { RouterProvider } from 'react-router-dom';
+import './modules/ui/tokens.css';
+import './index.css';
 import { AppProviders } from './app/providers/AppProviders';
-import { DataCheckPage } from './app/pages/DataCheckPage';
+import { router } from './app/router';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProviders>
-      <DataCheckPage />
+      <RouterProvider router={router} />
     </AppProviders>
   </StrictMode>,
 );

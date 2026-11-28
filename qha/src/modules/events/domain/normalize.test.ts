@@ -69,6 +69,16 @@ describe("normalizeEvent (eventos baseados no formato real da API)", () => {
     });
   });
 
+  it("o género (exceto 'outro') é pesquisável; 'outro' não acrescenta ruído", () => {
+    const fado = normalizeEvent({ ...minimalEvent, genre: "fado" });
+    const classica = normalizeEvent({ ...minimalEvent, genre: "musica-classica" });
+    const outro = normalizeEvent({ ...minimalEvent, genre: "outro" });
+
+    expect(fado?.searchText).toContain("fado");
+    expect(classica?.searchText).toContain("musica classica"); // etiqueta "Música clássica", sem acentos
+    expect(outro?.searchText.includes("outro")).toBe(false);
+  });
+
   it("limpa descrições com muitas linhas vazias", () => {
     expect(normalizeEvent(messyDescriptionEvent)).toMatchObject({
       startDate: "2027-07-30",

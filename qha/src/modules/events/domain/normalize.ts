@@ -2,6 +2,7 @@ import type { Coordinates, Event } from './types';
 import type { RawEvent } from './schema';
 import { cleanDescription, cleanTitle, foldForSearch, toHttpUrl, trimOrNull } from './clean';
 import { toLisbonDateTime } from './dates';
+import { genreLabel } from './genres';
 
 function toCoordinates(
   lat: number | null | undefined,
@@ -11,6 +12,23 @@ function toCoordinates(
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
   return { lat, lon };
+}
+
+/**
+ * Texto onde a pesquisa procura: sem acentos e em minúsculas. Inclui o género
+ * (para "teatro" ou "fado" encontrarem eventos desse género mesmo sem a palavra
+ * no título), exceto "outro", que só acrescentaria ruído.
+ * É a ÚNICA definição: os testes dos filtros usam esta mesma função.
+ */
+export function buildSearchText(
+  event: Pick<Event, 'title' | 'venueName' | 'concelho' | 'distrito' | 'genre' | 'tags'>,
+): string {
+  const genre = event.genre === 'outro' ? null : genreLabel(event.genre);
+  return foldForSearch(
+    [event.title, event.venueName, event.concelho, event.distrito, genre, ...event.tags]
+      .filter(Boolean)
+      .join(' '),
+  );
 }
 
 /**
@@ -26,12 +44,7 @@ export function normalizeEvent(raw: RawEvent): Event | null {
   // Fim ausente, inválido ou anterior ao início → evento de um só dia.
   const endDate = end && end.date >= start.date ? end.date : start.date;
 
-  const venueName = trimOrNull(raw.venue_name);
-  const concelho = trimOrNull(raw.concelho);
-  const distrito = trimOrNull(raw.distrito);
-  const tags = (raw.tags ?? []).map((tag) => tag.trim()).filter(Boolean);
-
-  return {
+  const event: Omit<Event, 'searchText'> = {
     id: raw.id,
     title,
     description: cleanDescription(raw.description),
@@ -43,12 +56,12 @@ export function normalizeEvent(raw: RawEvent): Event | null {
     startTime: start.time === '00:00' ? null : start.time,
 
     genre: trimOrNull(raw.genre)?.toLowerCase() ?? 'outro',
-    tags,
+    tags: (raw.tags ?? []).map((tag) => tag.trim()).filter(Boolean),
 
-    distrito,
-    concelho,
+    distrito: trimOrNull(raw.distrito),
+    concelho: trimOrNull(raw.concelho),
     venueId: trimOrNull(raw.venue_id),
-    venueName,
+    venueName: trimOrNull(raw.venue_name),
     address: trimOrNull(raw.address),
     coordinates: toCoordinates(raw.lat, raw.lon),
 
@@ -60,9 +73,7 @@ export function normalizeEvent(raw: RawEvent): Event | null {
 
     relevanceScore: raw.relevance_score ?? 0,
     firstSeenAt: trimOrNull(raw.first_seen_at),
-
-    searchText: foldForSearch(
-      [title, venueName, concelho, distrito, ...tags].filter(Boolean).join(' '),
-    ),
   };
+
+  return { ...event, searchText: buildSearchText(event) };
 }

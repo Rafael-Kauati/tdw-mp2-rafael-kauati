@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { describeEventsError, EventDetail, useEvent } from '../../modules/events';
 import { EmptyState, ErrorState, Skeleton } from '../../modules/ui';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { readBackTo } from '../navigation';
 import styles from './EventoDetalhePage.module.css';
 
 function DetalheSkeleton() {
@@ -18,6 +19,7 @@ function DetalheSkeleton() {
 
 export function EventoDetalhePage() {
   const { id } = useParams();
+  const location = useLocation();
   const { data: event, error, isPending, isError, refetch } = useEvent(id);
   useDocumentTitle(event?.title ?? 'Evento');
 
@@ -43,8 +45,9 @@ export function EventoDetalhePage() {
 
   return (
     <div>
-      <Link to="/eventos" className={styles.back}>
-        ← Todos os eventos
+      {/* Volta à lista tal como estava (filtros e página), se se veio de lá. */}
+      <Link to={readBackTo(location.state)} className={styles.back}>
+        ← Voltar aos eventos
       </Link>
       {content}
     </div>

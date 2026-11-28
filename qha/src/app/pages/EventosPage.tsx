@@ -1,71 +1,106 @@
-import { useMemo, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { describeEventsError, formatEventDates, genreLabel, useEventsFeed } from '../../modules/events';
-import { Badge, ErrorState, Skeleton } from '../../modules/ui';
+import { useCallback, useMemo, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  applyFilterPatch,
+  computeFacets,
+  DEFAULT_FILTERS,
+  describeEventsError,
+  EventList,
+  EventListSkeleton,
+  FiltersBar,
+  filterEvents,
+  hasActiveFilters,
+  Pagination,
+  paginate,
+  parseFilters,
+  serializeFilters,
+  sortEvents,
+  todayInLisbon,
+  useEventsFeed,
+  type Event,
+  type EventFilters,
+} from '../../modules/events';
+import { Button, EmptyState, ErrorState } from '../../modules/ui';
+import { RouterLink } from '../components/RouterLink';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import styles from './EventosPage.module.css';
 
-const PREVIEW_SIZE = 12;
+const PAGE_SIZE = 24;
 
-function EventosSkeleton() {
-  return (
-    <ul className={styles.list} aria-busy="true" aria-label="A carregar eventos">
-      {Array.from({ length: 6 }, (_, index) => (
-        <li key={index} className={styles.item}>
-          <div className={styles.link}>
-            <Skeleton width="5rem" height="1.4rem" />
-            <Skeleton height="1.4rem" />
-            <Skeleton width="70%" />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+function getEventHref(event: Event): string {
+  return `/eventos/${encodeURIComponent(event.id)}`;
 }
 
 /**
- * Página PROVISÓRIA: prova o ciclo loading → erro → dados com o router.
- * No dia 5 passa a usar filtros no URL, paginação e os componentes de listagem.
+ * Listagem. O URL é a fonte de verdade dos filtros, da ordenação e da página:
+ *   URL → parseFilters → filtrar/ordenar/paginar → ecrã
+ *   ecrã → updateFilters → serializeFilters → URL
+ * Os dados vêm do TanStack Query; nada disto é guardado em useState.
  */
 export function EventosPage() {
   useDocumentTitle('Eventos');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
+  const today = useMemo(() => todayInLisbon(), []);
   const { data, error, isPending, isError, refetch } = useEventsFeed();
 
-  const preview = useMemo(() => {
-    if (!data) return [];
-    return [...data.events].sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, PREVIEW_SIZE);
-  }, [data]);
+  // ~5700 eventos: filtrar + ordenar + facetas demora alguns milissegundos. Se algum dia pesar,
+  // separar o que depende da página (só paginate) do resto, ou mover para um Web Worker.
+  const view = useMemo(() => {
+    if (!data) return null;
+    const matches = sortEvents(filterEvents(data.events, filters, today), filters.sort, today);
+    return {
+      facets: computeFacets(data.events, filters, today),
+      page: paginate(matches, filters.page, PAGE_SIZE),
+    };
+  }, [data, filters, today]);
+
+  const updateFilters = useCallback(
+    (patch: Partial<EventFilters>) => {
+      const keys = Object.keys(patch);
+      // Escrever na pesquisa substitui a entrada do histórico (senão "voltar" passaria letra a letra).
+      const onlyQuery = keys.length === 1 && keys[0] === 'q';
+      setSearchParams(serializeFilters(applyFilterPatch(filters, patch)), { replace: onlyQuery });
+    },
+    [filters, setSearchParams],
+  );
+
+  // Limpar filtros mantém a ordenação escolhida: ordenar não é filtrar.
+  const resetFilters = useCallback(() => {
+    setSearchParams(serializeFilters({ ...DEFAULT_FILTERS, sort: filters.sort }));
+  }, [filters.sort, setSearchParams]);
 
   let content: ReactNode;
   if (isPending) {
-    content = <EventosSkeleton />;
+    content = <EventListSkeleton />;
   } else if (isError) {
     const message = describeEventsError(error);
     content = (
       <ErrorState title={message.title} description={message.description} onRetry={() => void refetch()} />
     );
-  } else {
+  } else if (view && view.page.total === 0) {
+    content = (
+      <EmptyState
+        title="Nenhum evento encontrado"
+        description="Experimenta alargar as datas ou remover algum filtro."
+        action={
+          hasActiveFilters(filters) ? (
+            <Button variant="secondary" onClick={resetFilters}>
+              Limpar filtros
+            </Button>
+          ) : undefined
+        }
+      />
+    );
+  } else if (view) {
     content = (
       <>
-        <p className={styles.summary}>
-          {data.events.length} eventos no total · a mostrar os {PREVIEW_SIZE} mais relevantes
-        </p>
-        <ul className={styles.list}>
-          {preview.map((event) => (
-            <li key={event.id} className={styles.item}>
-              <Link to={`/eventos/${encodeURIComponent(event.id)}`} className={styles.link}>
-                <Badge>{genreLabel(event.genre)}</Badge>
-                <span className={styles.title}>{event.title}</span>
-                <span className={styles.meta}>
-                  {formatEventDates(event.startDate, event.endDate, event.startTime)}
-                </span>
-                {(event.venueName ?? event.concelho) && (
-                  <span className={styles.meta}>{event.venueName ?? event.concelho}</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <EventList events={view.page.items} getHref={getEventHref} linkComponent={RouterLink} />
+        <Pagination
+          page={view.page.page}
+          pageCount={view.page.pageCount}
+          onPageChange={(page) => updateFilters({ page })}
+        />
       </>
     );
   }
@@ -75,6 +110,16 @@ export function EventosPage() {
       <h1 id="eventos-titulo" className={styles.heading}>
         Eventos
       </h1>
+
+      {view && (
+        <FiltersBar filters={filters} facets={view.facets} onChange={updateFilters} onReset={resetFilters} />
+      )}
+      {view && (
+        <p role="status" className={styles.summary}>
+          {view.page.total} {view.page.total === 1 ? 'resultado' : 'resultados'}
+        </p>
+      )}
+
       {content}
     </section>
   );

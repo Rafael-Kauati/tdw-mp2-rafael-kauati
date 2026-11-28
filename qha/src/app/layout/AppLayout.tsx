@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 import { ErrorBoundary, cx } from '../../modules/ui';
 import { APP_NAME } from '../config';
 import styles from './AppLayout.module.css';
@@ -48,6 +48,9 @@ export function AppLayout() {
           · Projeto académico TDW/MCTW
         </div>
       </footer>
+
+      {/* Ao voltar atrás repõe o scroll onde estava; ao navegar para a frente sobe ao topo. */}
+      <ScrollRestoration />
     </div>
   );
 }

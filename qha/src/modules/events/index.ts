@@ -13,3 +13,9 @@ export {
 export type { EventsErrorMessage } from './data/errors';
 export { EventDetail } from './components/EventDetail';
 export { formatEventDates, formatPrice } from './components/format';
+export { EventCard } from './components/EventCard';
+export { EventList } from './components/EventList';
+export { EventListSkeleton } from './components/EventListSkeleton';
+export { FiltersBar } from './components/FiltersBar';
+export { Pagination } from './components/Pagination';
+export type { EventLinkComponent, EventLinkProps } from './components/types';
